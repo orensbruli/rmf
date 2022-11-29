@@ -11,25 +11,18 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-#  build-ros_rpm_image:
-#    name: Push Docker image to GitHub Packages
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: build rmf image and push to gh registry
-#        uses: docker/build-push-action@v3
-#        with:
-#          username: ${{ github.actor }}
-#          password: ${{ secrets.GITHUB_TOKEN }}
-#          registry: docker.pkg.github.com
-#          # update registry only during push to main and nightly build
-#          #          push: ${{ github.event_name == 'push' || github.event_name == 'schedule' }}
-#          push: true
-#          tags: latest
-#          context: dockers
-#          file: dockers/ros_rpm.Dockerfile
   build-docker-images:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image_name: ros_rpm
+          - image_name: rmf_from_packages
+            pack: rpm
+            base_image: ros_rpm
+
+
     permissions:
       contents: read
       packages: write
@@ -49,13 +42,17 @@ jobs:
         id: meta
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image_name }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: dockers
-          file: dockers/rmf_from_packages.Dockerfile
+          file: dockers/${{ matrix.image_name }}.Dockerfile
+#          push: ${{ github.event_name == 'push' || github.event_name == 'schedule' }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            PACK=${{ matrix.pack }}
+            BASE_IMAGE=${{ matrix.base_image }}
