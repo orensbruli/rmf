@@ -16,6 +16,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        image_name: [rmf_from_src]
+#        base_image: [ros:humble, "ghcr.io/${{ github.repository_owner }}/ros_rpm:latest"]
+#        rmf_image: [base_build_tools, source_rosdep, source_built]
         include:
           - image_name: rmf_from_packages
             pack: rpm
