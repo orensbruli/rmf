@@ -17,8 +17,8 @@ jobs:
       fail-fast: false
       matrix:
         image_name: [rmf_from_src]
-#        base_image: [ros:humble, "ghcr.io/${{ github.repository_owner }}/ros_rpm:latest"]
-#        rmf_image: [base_build_tools, source_rosdep, source_built]
+        base_image: ["ros:humble", "ghcr.io/${{ github.repository_owner }}/ros_rpm:latest"]
+        rmf_image: [base_build_tools, source_rosdep, source_built]
         include:
           - image_name: rmf_from_packages
             pack: rpm
@@ -55,7 +55,7 @@ jobs:
           file: dockers/${{ matrix.image_name }}.Dockerfile
 #          push: ${{ github.event_name == 'push' || github.event_name == 'schedule' }}
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.image_name }}${{ matrix.pack }}:latest
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.image_name }}${{ matrix.rmf_image }}${{ matrix.pack }}:latest
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             PACK=${{ matrix.pack }}
