@@ -19,7 +19,7 @@ jobs:
         include:
           - image_name: rmf_from_packages
             pack: rpm
-            base_image: ghcr.io/${{ github.repository }}/ros_rpm
+            base_image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/ros_rpm:latest
 
     permissions:
       contents: read
