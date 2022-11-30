@@ -20,6 +20,9 @@ jobs:
           - image_name: rmf_from_packages
             pack: rpm
             base_image: ghcr.io/${{ github.repository_owner }}/ros_rpm:latest
+          - image_name: rmf_from_packages
+            pack: deb
+            base_image: ros:humble
 
     permissions:
       contents: read
