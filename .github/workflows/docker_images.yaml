@@ -18,7 +18,7 @@ jobs:
       matrix:
         image_name: [rmf_from_src]
         base_image: ["ros:humble", "ghcr.io/${{ github.repository_owner }}/ros_rpm:latest"]
-        rmf_image: [base_build_tools, source_rosdep, source_built]
+        flavor: [base_build_tools, source_rosdep, source_built]
         include:
           - image_name: rmf_from_packages
             pack: rpm
@@ -48,6 +48,12 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image_name }}
 
+      - name: sortening_var_names
+        id: vars
+        run: |
+          echo ::set-output name=image::$(echo '{ "rmf_from_src": "src", "rmf_from_packages": "bin" }' | jq -r 'to_entries[] | select(.key=="${{ matrix.image_name }}") | .value')
+          echo ::set-output name=base::$(echo '{ "ros:humble": "ub", "ghcr.io/${{ github.repository_owner }}/ros_rpm:latest": "rh" }' | jq -r 'to_entries[] | select(.key=="${{ matrix.base_image }}") | .value')
+          echo ::set-output name=flavor::$(echo '{ "base_build_tools": "tools", "source_rosdep": "rosdep", "source_built": "built" }' | jq -r 'to_entries[] | select(.key=="${{ matrix.flavor }}") | .value')
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
@@ -55,8 +61,9 @@ jobs:
           file: dockers/${{ matrix.image_name }}.Dockerfile
 #          push: ${{ github.event_name == 'push' || github.event_name == 'schedule' }}
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.image_name }}${{ matrix.rmf_image }}${{ matrix.pack }}:latest
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{steps.vars.outputs.image }}${{steps.vars.outputs.base}}${{steps.vars.outputs.flavor}}:latest
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             PACK=${{ matrix.pack }}
             BASE_IMAGE=${{ matrix.base_image }}
+            RMF_IMAGE=${{matrix.flavor}}
